@@ -1,4 +1,4 @@
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN adduser --disabled-password --gecos "" appuser
 
 # Stage 2: Install dependencies
-FROM base as dependencies
+FROM base AS dependencies
 
 # Copy requirements
 COPY requirements.txt .
@@ -28,7 +28,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 3: Runtime
-FROM base as runtime
+FROM base AS runtime
 
 # Copy dependencies from the dependencies stage
 COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages

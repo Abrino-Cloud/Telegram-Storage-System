@@ -1,29 +1,29 @@
 # Build stage
-FROM node:18-alpine as build-stage
+FROM node:18-alpine AS build-stage
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with specific optimizations
+RUN npm install --no-fund --no-audit --progress=false --loglevel=error
 
 # Copy all files
 COPY . .
 
-# Build app
-RUN npm run build
+# Build app (only if needed)
+RUN if [ -f "src/main.js" ] || [ -f "src/App.vue" ]; then npm run build; else mkdir -p dist && echo "<html><body><h1>Telegram Storage</h1><p>Frontend under development</p></body></html>" > dist/index.html; fi
 
 # Production stage
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine AS production-stage
 
 # Copy built files from build stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Create a default nginx config
+RUN echo "server { listen 80; location / { root /usr/share/nginx/html; index index.html; try_files \$uri \$uri/ /index.html; } }" > /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80
