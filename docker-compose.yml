@@ -1,0 +1,139 @@
+---
+services:
+  # FastAPI Backend
+  api:
+    container_name: abrino-storage-api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    networks:
+      - internal
+      - proxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.abrino-api.entrypoints=http"
+      - "traefik.http.routers.abrino-api.rule=Host(`storage-api.abrino.cloud`)"
+      - "traefik.http.middlewares.abrino-api-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.abrino-api.middlewares=abrino-api-https-redirect"
+      - "traefik.http.routers.abrino-api-secure.entrypoints=https"
+      - "traefik.http.routers.abrino-api-secure.rule=Host(`storage-api.abrino.cloud`)"
+      - "traefik.http.routers.abrino-api-secure.tls=true"
+      - "traefik.http.routers.abrino-api-secure.service=abrino-api"
+      - "traefik.http.services.abrino-api.loadbalancer.server.port=8000"
+      - "traefik.docker.network=proxy"
+    security_opt:
+      - no-new-privileges:true
+
+  # Vue.js Frontend
+  frontend:
+    container_name: abrino-storage-ui
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - api
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.abrino-storage.entrypoints=http"
+      - "traefik.http.routers.abrino-storage.rule=Host(`storage.abrino.cloud`)"
+      - "traefik.http.middlewares.abrino-storage-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.abrino-storage.middlewares=abrino-storage-https-redirect"
+      - "traefik.http.routers.abrino-storage-secure.entrypoints=https"
+      - "traefik.http.routers.abrino-storage-secure.rule=Host(`storage.abrino.cloud`)"
+      - "traefik.http.routers.abrino-storage-secure.tls=true"
+      - "traefik.http.routers.abrino-storage-secure.service=abrino-storage"
+      - "traefik.http.services.abrino-storage.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    security_opt:
+      - no-new-privileges:true
+
+  # Telegram Bot
+  telegram-bot:
+    container_name: abrino-storage-bot
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - ./bot:/app
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+
+  # PostgreSQL Database
+  postgres:
+    container_name: abrino-storage-db
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+
+  # Redis Cache
+  redis:
+    container_name: abrino-storage-cache
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  internal:
+  proxy:
+    external: true

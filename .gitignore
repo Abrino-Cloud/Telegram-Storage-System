@@ -1,0 +1,88 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+venv/
+.venv/
+
+# Vue.js / Node.js
+node_modules/
+/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/test/unit/coverage/
+/test/e2e/reports/
+selenium-debug.log
+package-lock.json
+yarn.lock
+.DS_Store
+.nuxt
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+postgres-data/
+redis-data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.history/
+*.sublime-*
+*.code-workspace
+jsconfig.json
+.project
+.classpath
+.settings
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Misc
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.directory
+*~
