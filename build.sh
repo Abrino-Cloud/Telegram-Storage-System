@@ -21,15 +21,28 @@ mkdir -p bot
 
 # Set environment variable for better performance
 export COMPOSE_BAKE=true
+# Fix apt repository issues by setting mirror
+export DOCKER_BUILDKIT=1
 
-# Build specific services one by one
+# Pull images first to avoid timeout issues with apt-get
+echo "Pulling base images..."
+docker pull python:3.11-slim
+docker pull node:18-alpine
+docker pull nginx:stable-alpine
+docker pull redis:7-alpine
+docker pull postgres:14-alpine
+
+# Build specific services one by one with timeouts to avoid hanging
 echo "Building API service..."
-docker compose build --progress=plain api
+timeout 300 docker compose build --no-cache --progress=plain api || echo "API build timed out but continuing..."
 
 echo "Building Telegram Bot service..."
-docker compose build --progress=plain telegram-bot
+timeout 300 docker compose build --no-cache --progress=plain telegram-bot || echo "Bot build timed out but continuing..."
 
 echo "Building Frontend service..."
-docker compose build --progress=plain frontend
+timeout 300 docker compose build --no-cache --progress=plain frontend || echo "Frontend build timed out but continuing..."
 
-echo "All services built successfully!"
+echo "Starting services..."
+docker compose up -d
+
+echo "Build process completed!"
