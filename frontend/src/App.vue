@@ -1,6 +1,10 @@
 <template>
   <div class="app-wrapper">
-    <Navbar v-if="isAuthenticated" />
+    <header class="header">
+      <div class="container">
+        <h1>Telegram Storage System</h1>
+      </div>
+    </header>
     
     <div class="main-content">
       <router-view />
@@ -11,50 +15,13 @@
         <p>AbrinoStorage - Telegram Storage System</p>
       </div>
     </footer>
-    
-    <Notifications />
   </div>
 </template>
 
 <script>
-import { computed, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import Navbar from '@/components/Navbar.vue';
-import Notifications from '@/components/Notifications.vue';
-
 export default {
-  name: 'App',
-  components: {
-    Navbar,
-    Notifications
-  },
-  setup() {
-    const store = useStore();
-    const router = useRouter();
-    
-    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated']);
-    
-    onMounted(async () => {
-      // Check if user is authenticated
-      const token = localStorage.getItem('token');
-      if (token) {
-        // Validate token and get user profile
-        try {
-          await store.dispatch('auth/fetchUserProfile');
-        } catch (error) {
-          // Token is invalid, redirect to login
-          localStorage.removeItem('token');
-          router.push('/login');
-        }
-      }
-    });
-    
-    return {
-      isAuthenticated
-    };
-  }
-};
+  name: 'App'
+}
 </script>
 
 <style>
@@ -88,10 +55,16 @@ body {
   min-height: 100vh;
 }
 
+.header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem 0;
+  text-align: center;
+}
+
 .main-content {
   flex: 1;
   padding: 20px;
-  margin-top: 60px;
 }
 
 .container {
@@ -105,93 +78,5 @@ body {
   color: #fff;
   padding: 20px 0;
   text-align: center;
-}
-
-.btn {
-  display: inline-block;
-  padding: 8px 16px;
-  background-color: var(--primary-color);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-size: 14px;
-}
-
-.btn:hover {
-  background-color: #2980b9;
-}
-
-.btn-success {
-  background-color: var(--success-color);
-}
-
-.btn-success:hover {
-  background-color: #219a52;
-}
-
-.btn-danger {
-  background-color: var(--danger-color);
-}
-
-.btn-danger:hover {
-  background-color: #c0392b;
-}
-
-.card {
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-
-.alert {
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-}
-
-.alert-success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.alert-danger {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.alert-warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
-}
-
-.alert-info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
 }
 </style>

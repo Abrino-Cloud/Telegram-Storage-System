@@ -24,13 +24,13 @@ load_dotenv()
 
 # Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_ADMIN_USER_ID = int(os.getenv("TELEGRAM_ADMIN_USER_ID"))
+TELEGRAM_ADMIN_USER_ID = int(os.getenv("TELEGRAM_ADMIN_USER_ID", "0"))
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = int(os.getenv("REDIS_PORT"))
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
 # Database setup
@@ -48,7 +48,7 @@ redis_pool = redis.ConnectionPool(
 
 # Configure logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -609,7 +609,7 @@ async def health_check():
         
         await asyncio.sleep(30)
 
-def main():
+async def main():
     """Start the bot"""
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     
@@ -635,7 +635,16 @@ def main():
     asyncio.create_task(health_check())
     
     # Run the bot
-    application.run_polling()
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    
+    # Keep the script running
+    try:
+        await asyncio.Future()  # Run forever
+    except (KeyboardInterrupt, SystemExit):
+        await application.stop()
+        await application.updater.stop()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

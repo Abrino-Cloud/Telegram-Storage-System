@@ -13,8 +13,9 @@ RUN npm install --no-fund --no-audit --progress=false --loglevel=error
 # Copy all files
 COPY . .
 
-# Build app (only if needed)
-RUN if [ -f "src/main.js" ] || [ -f "src/App.vue" ]; then npm run build; else mkdir -p dist && echo "<html><body><h1>Telegram Storage</h1><p>Frontend under development</p></body></html>" > dist/index.html; fi
+# Create a simple dist for development
+RUN mkdir -p dist && \
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Telegram Storage</title><style>body{font-family:sans-serif;margin:0;padding:0}header{background:#3498db;color:white;padding:20px;text-align:center}main{padding:20px}footer{background:#2c3e50;color:white;padding:10px;text-align:center;position:fixed;bottom:0;width:100%}</style></head><body><header><h1>Telegram Storage System</h1></header><main><h2>Welcome to AbrinoStorage</h2><p>The system is under development. Please check back later.</p></main><footer>AbrinoStorage - Telegram-based file storage</footer></body></html>' > dist/index.html
 
 # Production stage
 FROM nginx:stable-alpine AS production-stage
@@ -34,3 +35,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
+
+
